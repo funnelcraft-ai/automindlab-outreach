@@ -1,0 +1,22 @@
+<?php
+// Local development config. Copy to config.php in the app folder (it is git-ignored).
+// Generate the key with:  php -r "echo base64_encode(random_bytes(32)), PHP_EOL;"
+return [
+    'db_host' => '127.0.0.1',
+    'db_name' => 'outreach_dev',
+    'db_user' => 'outreach',
+    'db_pass' => 'outreach',
+    'base_url' => 'http://127.0.0.1:8080',      // must stay local for local_testing to take effect
+    'app_key' => 'PASTE_BASE64_KEY_HERE',
+    'app_timezone' => 'Asia/Kolkata',
+    'debug' => true,
+
+    // Local test mode: allows the fixture sites on private addresses, skips the MX check for fake domains,
+    // and allows http:// alert webhooks. Ignored (and reported as critical) on any non-local base_url.
+    'local_testing' => true,
+    'places_endpoint' => 'http://127.0.0.1:8090/',
+    'places_details_endpoint' => 'http://127.0.0.1:8090/places/',
+
+    // Convenient locally; keep true (the default) everywhere else.
+    'admin_require_2fa' => false,
+];

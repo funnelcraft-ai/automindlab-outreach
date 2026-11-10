@@ -1,0 +1,20 @@
+# Optional local IMAP server, to test reply reading (dev only).
+#   echo "dev@outreach.test:{PLAIN}devpass" > /tmp/dovecot.users
+#   dovecot -F -c dev/dovecot.conf.example
+# To "receive" a reply, drop an .eml file into /tmp/mail/dev@outreach.test/new/
+protocols = imap
+listen = 127.0.0.1
+ssl = no
+disable_plaintext_auth = no
+auth_mechanisms = plain login
+mail_location = maildir:/tmp/mail/%u
+base_dir = /tmp/dovecot-run
+log_path = /tmp/dovecot.log
+passdb {
+  driver = passwd-file
+  args = scheme=PLAIN username_format=%u /tmp/dovecot.users
+}
+userdb {
+  driver = static
+  args = uid=vmail gid=vmail home=/tmp/mail/%u
+}
