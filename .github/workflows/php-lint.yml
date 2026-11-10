@@ -1,0 +1,24 @@
+# Checks every PHP file for syntax errors on each push and pull request (PHP 8.1 = minimum, 8.3 = Hostinger default).
+name: PHP lint
+on:
+  push:
+  pull_request:
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: ['8.1', '8.3']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: pdo_mysql, curl, mbstring, sodium
+          coverage: none
+      - name: Lint
+        run: find . -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l
+      - name: No secrets committed
+        run: |
+          ! git ls-files | grep -E '(^|/)(config\.php|outreach-config\.php|\.env)$'
+          ! git grep -nE 'sk-ant-[A-Za-z0-9_-]{20,}|sk-(proj-)?[A-Za-z0-9]{32,}|AIza[0-9A-Za-z_-]{35}' -- . ':!vendor'
