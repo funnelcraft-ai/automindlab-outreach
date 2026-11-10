@@ -1,0 +1,23 @@
+# Secrets — never commit
+config.php
+outreach-config.php
+*.env
+.env*
+
+# Runtime files written by the app
+storage/*
+!storage/.htaccess
+!storage/.gitkeep
+*.log
+
+# Local development output
+dev/outbox/
+__pycache__/
+*.pyc
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

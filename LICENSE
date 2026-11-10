@@ -1,0 +1,9 @@
+Copyright (c) 2026 Automindlab (automindlab.io). All rights reserved.
+
+This software and its source code are proprietary and confidential. No part of it may be copied,
+modified, distributed, sublicensed or sold without prior written permission from Automindlab.
+
+Third-party components keep their own licences:
+- PHPMailer (vendor/phpmailer) — GNU LGPL 2.1, see vendor/phpmailer/LICENSE
+- Google Sans Flex font (assets/google-sans-flex.woff2) — SIL Open Font License 1.1, see assets/google-sans-flex-OFL.txt
+- QR code generator (assets/qrcode.js) — MIT licence, notice in the file header
