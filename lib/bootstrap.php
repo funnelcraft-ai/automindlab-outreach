@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 define('APP_ROOT', dirname(__DIR__));
-define('APP_VERSION', '2.4.1');
+define('APP_VERSION', '2.4.2');
 define('SCHEMA_VERSION', 8);
 
 // Config can live OUTSIDE the web root (recommended): ../outreach-config.php next to public_html.
@@ -28,6 +28,8 @@ if (!empty($GLOBALS['CONFIG']['debug'])) {
 }
 ini_set('log_errors', '1');
 ini_set('error_log', APP_ROOT . '/storage/php-error.log');
+// Stack traces are stored in the error log and sent in alerts: keep function arguments (database, inbox and user passwords) out of them.
+ini_set('zend.exception_ignore_args', '1');
 
 function cfg(string $key, $default = null) { return $GLOBALS['CONFIG'][$key] ?? $default; }
 
@@ -78,7 +80,14 @@ function db(): PDO {
 }
 function q(string $sql, array $p = []): PDOStatement {
     $t = microtime(true);
-    $s = db()->prepare($sql); $s->execute($p);
+    try {
+        $s = db()->prepare($sql); $s->execute($p);
+    } catch (PDOException $ex) {
+        // Many pages show an exception's message to the user. A raw database message names tables, columns and SQL, so the
+        // full error goes to the developer log and the user gets only a reference.
+        report_error($ex, ['level' => 'error', 'source' => PHP_SAPI === 'cli' ? 'cron' : 'web']);
+        throw new RuntimeException('A database error occurred (ref ' . request_id() . '). Try again, and quote this reference if it keeps happening.', 0, $ex);
+    }
     $GLOBALS['QUERY_COUNT'] = ($GLOBALS['QUERY_COUNT'] ?? 0) + 1;
     $ms = (microtime(true) - $t) * 1000;
     if ($ms >= SLOW_QUERY_MS) {
@@ -238,6 +247,7 @@ function http_request(string $method, string $url, array $headers = [], $body = 
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_MAXREDIRS => 5,
+        CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS, CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
         CURLOPT_TIMEOUT => $timeout,
         CURLOPT_CONNECTTIMEOUT => 10,
         CURLOPT_HTTPHEADER => $h,

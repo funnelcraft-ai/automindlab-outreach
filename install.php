@@ -21,7 +21,12 @@ if (!in_array(false, $checks, true)) {
         app_key();
         db();
         $installed = false;
-        try { $installed = (int) val('SELECT COUNT(*) FROM users') > 0; } catch (Throwable $e) {}
+        try { $installed = (int) val('SELECT COUNT(*) FROM users') > 0; }
+        catch (Throwable $e) {
+            // Only "table doesn't exist" means a fresh database. Any other failure (timeout, permissions) must never re-open the installer.
+            $prev = $e->getPrevious();
+            if ((string) ($prev instanceof PDOException ? $prev->getCode() : $e->getCode()) !== '42S02') { http_response_code(503); exit('Database error. The installer is unavailable; try again shortly.'); }
+        }
         if ($installed) { http_response_code(404); exit('Not found.'); }   // locked for good once an admin exists (safe to leave in a Git deploy)
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $email = strtolower(trim((string) ($_POST['email'] ?? '')));

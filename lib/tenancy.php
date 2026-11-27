@@ -91,8 +91,16 @@ function can(string $role): bool {
     return ROLE_RANK[$r] >= ROLE_RANK[$role];
 }
 
+/** Where to send someone back to after a refused POST: the page they came from if it's on this site, else the dashboard (never an outside URL). */
+function safe_back(): string {
+    $p = parse_url((string) ($_SERVER['HTTP_REFERER'] ?? ''));
+    $mine = strtolower((string) parse_url((string) cfg('base_url'), PHP_URL_HOST));
+    if (!$p || $mine === '' || strtolower((string) ($p['host'] ?? '')) !== $mine || !in_array(strtolower((string) ($p['scheme'] ?? '')), ['http', 'https'], true)) return 'index.php';
+    return '/' . ltrim((string) ($p['path'] ?? ''), '/\\') . (isset($p['query']) ? '?' . $p['query'] : '');   // a single leading slash: "//evil.test" would be an outside link
+}
+
 function deny(string $msg = 'You don’t have permission to do that in this workspace.'): void {
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') { flash($msg, 'err'); redirect($_SERVER['HTTP_REFERER'] ?? 'index.php'); }
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') { flash($msg, 'err'); redirect(safe_back()); }
     http_response_code(403);
     page_header('Not allowed', '');
     echo '<section class="panel"><p>' . e($msg) . '</p><p><a class="btn tonal" href="index.php">Back to dashboard</a></p></section>';

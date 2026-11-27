@@ -29,8 +29,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             log_event(null, 'security', "Two-step verification turned on for {$user['email']}", 'warn');
             flash('Two-step verification is on. Save your recovery codes now.');
         } elseif ($a === 'disable_2fa' || $a === 'new_codes') {
-            if (!password_verify((string) ($_POST['current_password'] ?? ''), $user['password_hash'])) throw new RuntimeException('Your current password isn’t right.');
-            if (!totp_verify(decrypt_str((string) $user['totp_secret']), preg_replace('/\s+/', '', (string) ($_POST['code'] ?? '')))) throw new RuntimeException('That code didn’t match.');
+            if ($b = login_blocked((string) $user['email'])) throw new RuntimeException($b);
+            if (!password_verify((string) ($_POST['current_password'] ?? ''), $user['password_hash'])) { record_login_attempt((string) $user['email'], false); throw new RuntimeException('Your current password isn’t right.'); }
+            // Same rule as sign-in: a code works once, so one just used (or sniffed) can't be replayed here.
+            if (!totp_verify(decrypt_str((string) $user['totp_secret']), preg_replace('/\s+/', '', (string) ($_POST['code'] ?? '')), (int) ($user['totp_last_step'] ?? 0))) { record_login_attempt((string) $user['email'], false); throw new RuntimeException('That code didn’t match.'); }
+            q('UPDATE users SET totp_last_step = ? WHERE id = ?', [(int) ($_SESSION['last_totp_step'] ?? 0), $user['id']]);
             if ($a === 'disable_2fa') {
                 update('users', ['totp_secret' => null, 'totp_enabled' => 0, 'recovery_codes' => null], 'id = ?', [$user['id']]);
                 log_event(null, 'security', "Two-step verification turned off for {$user['email']}", 'warn');

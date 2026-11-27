@@ -387,7 +387,7 @@ function job_inbox(float $deadline, bool $force = false): array {
 
 function check_mailbox(array $mb, float $deadline): array {
     $out = ['replies' => 0, 'bounces' => 0];
-    $imap = new MiniImap($mb['imap_host'], (int) $mb['imap_port'], (int) $mb['imap_port'] === 993);
+    $imap = new MiniImap($mb['imap_host'], (int) $mb['imap_port'], imap_uses_ssl((int) $mb['imap_port']));
     $imap->login($mb['username'], mailbox_password($mb));
     $imap->select('INBOX');
     $uids = array_slice($imap->newUids((int) $mb['last_imap_uid']), 0, 40);

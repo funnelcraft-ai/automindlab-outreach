@@ -17,7 +17,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             elseif ($act === 'disqualify') { cancel_sequence($id, 'disqualified manually'); $n += update('leads', ['status' => 'disqualified'], 'id = ? AND tenant_id = ?', [$id, tid()]); }
             elseif ($act === 'redraft') $n += update('leads', ['status' => 'enriched', 'attempts' => 0, 'error' => null], "id = ? AND status IN ('drafted','disqualified','error') AND email IS NOT NULL AND tenant_id = ?", [$id, tid()]);
             elseif ($act === 'retry') $n += update('leads', ['status' => 'new', 'attempts' => 0, 'error' => null], "id = ? AND status IN ('no_email','error','skipped') AND tenant_id = ?", [$id, tid()]);
-            elseif ($act === 'delete') { if (!can('admin')) continue; q('DELETE FROM emails WHERE lead_id = ? AND tenant_id = ?', [$id, tid()]); $n += q("DELETE FROM leads WHERE id = ? AND tenant_id = ? AND last_sent_at IS NULL", [$id, tid()])->rowCount(); }
+            elseif ($act === 'delete') {
+                if (!can('admin')) continue;
+                // Contacted leads are kept (send history and opt-outs are compliance records); only never-contacted ones are removed, with their drafts.
+                if (!val('SELECT 1 FROM leads WHERE id = ? AND tenant_id = ? AND last_sent_at IS NULL', [$id, tid()])) continue;
+                q('DELETE FROM emails WHERE lead_id = ? AND tenant_id = ?', [$id, tid()]);
+                q('DELETE FROM li_tasks WHERE lead_id = ? AND tenant_id = ?', [$id, tid()]);
+                $n += q('DELETE FROM leads WHERE id = ? AND tenant_id = ? AND last_sent_at IS NULL', [$id, tid()])->rowCount();
+            }
         }
         flash("$act: $n lead(s) updated");
     } catch (Throwable $ex) { flash($ex->getMessage(), 'err'); }

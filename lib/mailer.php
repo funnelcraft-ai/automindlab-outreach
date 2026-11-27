@@ -20,7 +20,25 @@ function mailbox_sent_today(array $mb): int {
 
 function mailbox_password(array $mb): string { return decrypt_str((string) $mb['password_enc']); }
 
+/**
+ * Mail server names are typed in by a workspace admin, so they must point at the public internet: otherwise
+ * "Test connection" and the sending job could be used to probe the hosting account's private network.
+ */
+function assert_public_mail_host(string $host): void {
+    $host = trim($host);
+    $valid = $host !== '' && (preg_match('/^[A-Za-z0-9][A-Za-z0-9.\-]*$/', $host) || filter_var(trim($host, '[]'), FILTER_VALIDATE_IP));
+    if (!$valid) throw new DomainException('That mail server name isn’t valid.');
+    if (resolve_public_ip($host) === null) throw new DomainException("“{$host}” isn’t a public mail server (private, local and unresolvable addresses aren’t allowed).");
+}
+
+/** IMAP is always wrapped in TLS (the password is sent in clear text otherwise). Only the offline dev kit may use plain port 143. */
+function imap_uses_ssl(int $port): bool { return local_testing() ? $port === 993 : true; }
+
 function make_mailer(array $mb): PHPMailer {
+    assert_public_mail_host((string) $mb['smtp_host']);
+    if (!local_testing() && !in_array(strtolower((string) $mb['smtp_secure']), ['ssl', 'tls'], true)) {
+        throw new DomainException('This inbox is set to send without encryption, which would expose its password. Edit it and choose SSL or STARTTLS.');
+    }
     $m = new PHPMailer(true);
     $m->isSMTP();
     $m->Host = $mb['smtp_host'];
