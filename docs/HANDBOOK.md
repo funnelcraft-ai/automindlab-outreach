@@ -1,4 +1,4 @@
-# Developer handbook: Automindlab AI Outreach v2.4.2
+# Developer handbook: Automindlab AI Outreach v2.4.3
 
 This handbook is for developers working on the code. It covers how the system fits together, how to run it on your own machine, the rules every change must follow, and how a change gets to production.
 

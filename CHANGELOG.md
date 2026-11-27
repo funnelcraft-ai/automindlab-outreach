@@ -1,8 +1,12 @@
 # Changelog: Automindlab AI Outreach
 
-This package (v2.4.2) is the complete system: every feature below is included. Uploading it over any earlier version upgrades the database automatically on the first page load. Back up the database first.
+This package (v2.4.3) is the complete system: every feature below is included. Uploading it over any earlier version upgrades the database automatically on the first page load. Back up the database first.
 
 ---
+
+## v2.4.3: Gemini default model
+
+- New installs now default to `gemini-3.8-flash`. Google no longer serves `gemini-2.5-flash` to new accounts, so a new Gemini key failed its test with a 404. Existing installs keep whatever model is saved under Platform connections → Gemini; change it there if the test fails. The "$ per 1M tokens" price default is unchanged: check Google's current pricing so the spend tracker is accurate.
 
 ## v2.4.2: Security review fixes
 
