@@ -1,8 +1,20 @@
 # Changelog: Automindlab AI Outreach
 
-This package (v2.4.1) is the complete system: every feature below is included. Uploading it over any earlier version upgrades the database automatically on the first page load. Back up the database first.
+This package (v2.4.2) is the complete system: every feature below is included. Uploading it over any earlier version upgrades the database automatically on the first page load. Back up the database first.
 
 ---
+
+## v2.4.2: Security review fixes
+
+- **Mail servers are checked.** SMTP and IMAP host names typed into Mailboxes must resolve to public addresses, so "Test connection" and the sending job can't be used to probe the hosting account's private network. Custom inboxes are limited to the standard encrypted ports (SMTP 465/587/2525, IMAP 993).
+- **No more clear-text passwords.** IMAP always uses TLS (it used plain TCP on any port other than 993), and SMTP "None" security is refused. Only the offline dev kit (`local_testing`) may use unencrypted mail. An inbox saved with "None" now shows a clear error until it is edited.
+- **Secrets stay out of the error log.** PHP no longer records function arguments in stack traces, so database, inbox and user passwords can't end up in System health or alert messages.
+- **Database errors no longer reach the screen.** A failed query shows a short reference code; the full error (SQL, tables) goes to System health only.
+- **Sign-in protections extended.** Changing the password and turning off two-step verification or renewing recovery codes now count failed attempts toward the sign-in lockout, and an authenticator code can't be reused there.
+- **Safer redirects.** A refused form post only returns to a page on this site, never to an outside address taken from the Referer header.
+- **Installer.** It reopens only when the `users` table doesn't exist; a database timeout or permission error can no longer be mistaken for "not installed yet".
+- **Deleting leads** keeps the send history of leads that were already contacted (previously their emails were removed even though the lead stayed); LinkedIn tasks of deleted leads are removed.
+- **`dev/` and `docs/` have their own `.htaccess`,** so they stay private even if URL rewriting is off. Outgoing HTTP requests are limited to http/https.
 
 ## Today: 10 November 2026 (v2.1 → v2.4.1)
 

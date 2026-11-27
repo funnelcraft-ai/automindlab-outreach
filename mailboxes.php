@@ -9,7 +9,7 @@ function test_mailbox(int $id): string {
     $mb = owned_row('mailboxes', $id);
     if (!$mb) throw new RuntimeException('Mailbox not found.');
     $msg = [test_smtp($mb)];
-    $imap = new MiniImap($mb['imap_host'], (int) $mb['imap_port'], (int) $mb['imap_port'] === 993);
+    $imap = new MiniImap($mb['imap_host'], (int) $mb['imap_port'], imap_uses_ssl((int) $mb['imap_port']));
     $imap->login($mb['username'], mailbox_password($mb)); $imap->select('INBOX'); $imap->logout();
     $msg[] = 'IMAP login OK';
     $to = trim((string) setting('notify_email'));
@@ -40,6 +40,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $d['imap_host'] = $p['imap_host']; $d['imap_port'] = $p['imap_port'];
             }
             if ($d['smtp_host'] === '' || $d['imap_host'] === '') throw new DomainException('Enter the SMTP and IMAP server names from your email provider.');
+            assert_public_mail_host($d['smtp_host']);
+            assert_public_mail_host($d['imap_host']);
+            if (!local_testing()) {   // only standard, encrypted mail ports: this form must not be usable to probe other services
+                if (!in_array(strtolower($d['smtp_secure']), ['ssl', 'tls'], true)) throw new DomainException('Choose SSL or STARTTLS for sending: unencrypted SMTP would expose the inbox password.');
+                if (!in_array($d['smtp_port'], [465, 587, 2525], true)) throw new DomainException('Use SMTP port 465 (SSL) or 587 (STARTTLS).');
+                if ($d['imap_port'] !== 993) throw new DomainException('Use IMAP port 993 (SSL).');
+            }
             $d['email'] = strtolower($d['email']);
             $d['username'] = $d['username'] ?: $d['email'];
             $d['active'] = isset($_POST['active']) ? 1 : 0;

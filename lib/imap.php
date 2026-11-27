@@ -10,6 +10,8 @@ final class MiniImap {
     private int $tag = 0;
 
     public function __construct(string $host, int $port, bool $ssl = true, int $timeout = 20) {
+        assert_public_mail_host($host);
+        if (!$ssl && !local_testing()) throw new DomainException('IMAP must use SSL/TLS (port 993); plain connections would send the password unencrypted.');
         $ctx = stream_context_create(['ssl' => ['verify_peer' => true, 'verify_peer_name' => true, 'SNI_enabled' => true]]);
         $this->fp = @stream_socket_client(($ssl ? 'ssl://' : 'tcp://') . "$host:$port", $errno, $err, $timeout, STREAM_CLIENT_CONNECT, $ctx);
         if (!$this->fp) throw new RuntimeException("IMAP connect failed: $err");

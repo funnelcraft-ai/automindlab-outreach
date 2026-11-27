@@ -189,6 +189,7 @@ function password_problem(string $pw, string $email = ''): ?string {
 /** Change the password and sign out every other session. */
 function change_password(int $uid, string $current, string $new): ?string {
     $u = row('SELECT * FROM users WHERE id = ?', [$uid]);
+    if ($u && ($b = login_blocked((string) $u['email']))) return $b;     // a stolen session mustn't be able to guess the current password without limit
     if (!$u || !password_verify($current, $u['password_hash'])) { record_login_attempt((string) ($u['email'] ?? ''), false); return 'Your current password isn’t right.'; }
     if ($p = password_problem($new, $u['email'])) return $p;
     if (password_verify($new, $u['password_hash'])) return 'Choose a password you haven’t used here before.';
