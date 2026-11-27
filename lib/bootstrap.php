@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 define('APP_ROOT', dirname(__DIR__));
-define('APP_VERSION', '2.4.2');
+define('APP_VERSION', '2.4.3');
 define('SCHEMA_VERSION', 8);
 
 // Config can live OUTSIDE the web root (recommended): ../outreach-config.php next to public_html.
@@ -148,7 +148,7 @@ function setting_defaults(): array {
         'ai_provider'       => 'anthropic',      // anthropic | openai | gemini | mock
         'anthropic_model'   => 'claude-haiku-5-5',
         'openai_model'      => 'gpt-4o-mini',
-        'gemini_model'      => 'gemini-2.5-flash',
+        'gemini_model'      => 'gemini-3.8-flash',   // Google retired gemini-2.5-flash for new accounts (HTTP 404)
         'anthropic_key'     => '', 'openai_key' => '', 'gemini_key' => '',
         // $ per 1M tokens (input/output) — used for the cost tracker; edit to match current pricing
         'price_anthropic'   => '1.00/5.00',

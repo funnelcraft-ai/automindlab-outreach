@@ -1,4 +1,4 @@
-# Automindlab Outreach v2.4.2: codebase map
+# Automindlab Outreach v2.4.3: codebase map
 
 The app is plain PHP 8.1+ and MySQL/MariaDB with no build step and no Composer. It runs on Hostinger shared hosting with one cron job. The repository has 89 files, with about 7,500 lines of the app's own code (PHP, CSS, JS, SQL and the `dev/` kit). That line count leaves out the bundled PHPMailer library (`vendor/`) and the QR-code script (`assets/qrcode.js`).
 
